@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   provider: ^6.1.4
   shared_preferences: ^2.5.2
+  flutter_web_plugins:
+    sdk: flutter
 
   cupertino_icons: ^1.0.2
 

@@ -1,4 +1,5 @@
 import 'package:declarative_navigation/db/auth_repository.dart';
+import 'package:declarative_navigation/model/page_configuration.dart';
 import 'package:declarative_navigation/model/quote.dart';
 import 'package:declarative_navigation/screen/form_screen.dart';
 import 'package:declarative_navigation/screen/login_screen.dart';
@@ -8,7 +9,7 @@ import 'package:declarative_navigation/screen/register_screen.dart';
 import 'package:declarative_navigation/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 
-class MyRouterDelegate extends RouterDelegate
+class MyRouterDelegate extends RouterDelegate<PageConfiguration>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin {
   final GlobalKey<NavigatorState> _navigatorKey;
   final AuthRepository authRepository;
@@ -16,6 +17,7 @@ class MyRouterDelegate extends RouterDelegate
   List<Page> historyStack = [];
   bool? isLoggedIn;
   bool isRegister = false;
+  bool? isUnknown;
 
   MyRouterDelegate(this.authRepository)
     : _navigatorKey = GlobalKey<NavigatorState>() {
@@ -133,8 +135,47 @@ class MyRouterDelegate extends RouterDelegate
   ];
 
   @override
-  Future<void> setNewRoutePath(configuration) {
-    // TODO: implement setNewRoutePath
-    throw UnimplementedError();
+  Future<void> setNewRoutePath(PageConfiguration configuration) async {
+    switch (configuration) {
+      case UnknownPageConfiguration():
+        isUnknown = true;
+        isRegister = false;
+        break;
+      case RegisterPageConfiguration():
+        isRegister = true;
+        break;
+      case HomePageConfiguration() ||
+          LoginPageConfiguration() ||
+          SplashPageConfiguration():
+        isUnknown = false;
+        selectedQuote = null;
+        isRegister = false;
+        break;
+      case DetailQuotePageConfiguration():
+        isUnknown = false;
+        isRegister = false;
+        selectedQuote = configuration.quoteId.toString();
+        break;
+    }
+    notifyListeners();
+  }
+
+  @override
+  PageConfiguration? get currentConfiguration {
+    if (isLoggedIn == null) {
+      return SplashPageConfiguration();
+    } else if (isRegister == true) {
+      return RegisterPageConfiguration();
+    } else if (isLoggedIn == false) {
+      return LoginPageConfiguration();
+    } else if (isUnknown == true) {
+      return UnknownPageConfiguration();
+    } else if (selectedQuote == null) {
+      return HomePageConfiguration();
+    } else if (selectedQuote != null) {
+      return DetailQuotePageConfiguration(selectedQuote!);
+    } else {
+      return null;
+    }
   }
 }
